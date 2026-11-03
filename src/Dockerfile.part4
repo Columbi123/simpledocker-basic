@@ -1,0 +1,16 @@
+FROM nginx:latest
+
+COPY server/server.c /tmp/server.c
+COPY nginx/nginx.conf /etc/nginx/nginx.conf
+
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        gcc \
+        libc6-dev \
+        libfcgi-dev \
+        spawn-fcgi && \
+    gcc /tmp/server.c -o /usr/local/bin/mini_server -lfcgi && \
+    rm -f /tmp/server.c && \
+    rm -rf /var/lib/apt/lists/*
+
+CMD ["sh", "-c", "spawn-fcgi -p 8080 /usr/local/bin/mini_server && nginx -g 'daemon off;'"]
